@@ -158,7 +158,7 @@ const Dashboard = () => {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {renderMetricCard(
           "Total Revenue", 
-          "$45,231.89", 
+          "$45,200.00", 
           <DollarSign className="h-4 w-4 text-primary" />, 
           "↑ 20.1%",
           "/sales"

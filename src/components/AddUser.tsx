@@ -1,6 +1,6 @@
 import { useState } from "react";
-// import toast from "react-hot-toast";
-// import Server from "../../server/Server";
+import { toast } from "sonner";
+import Server from "../server/Server"
 
 export default function AddUser({ setShowModal, onSuccess }) {
   const [employee, setEmployee] = useState({
@@ -21,21 +21,22 @@ export default function AddUser({ setShowModal, onSuccess }) {
     e.preventDefault();
     setLoading(true);
 
-    // Server.register(employee)
-    //   .then(() => {
-    //     toast.success("New user successfully added");
-    //     setLoading(false);
-    //     onSuccess();
-    //   })
-    //   .catch((error) => {
-    //     console.error("Error registering user:", error);
-    //     toast.error("Failed to add new user");
-    //     setLoading(false);
-    //   });
+    Server.addSystemUSer(employee)
+      .then(() => {
+        toast.success("New user successfully added");
+        setLoading(false);
+        onSuccess();
+        setShowModal()
+      })
+      .catch((error) => {
+        console.error("Error registering user:", error);
+        toast.error("Failed to add new user");
+        setLoading(false);
+      });
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-5 flex items-center justify-center p-4">
+    <div className="fixed inset-0 bg-black bg-opacity-50  flex items-center justify-center ">
       <div className="bg-white rounded-lg w-full max-w-lg shadow-lg">
         {/* Header */}
         <div className="p-4 border-b flex justify-between items-center">
@@ -94,7 +95,7 @@ export default function AddUser({ setShowModal, onSuccess }) {
               </select>
             </div>
             <div>
-              <label className="text-sm text-gray-600">Role</label>
+              <label className="text-sm text-gray-600">Department</label>
               <select
                 name="department" // Ensure it matches your state structure
                 value={employee.department} // This should correspond to how role is stored in state

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   Card,
@@ -33,68 +33,14 @@ import {
   Globe,
   Database,
   BarChart4,
+  User,
 } from "lucide-react";
 import { toast } from "sonner";
 import AddUser from "@/components/AddUser";
 import AddDepartment from "@/components/AddDepartment";
-
-// Dummy user data
-const users = [
-  {
-    id: "1",
-    name: "Admin",
-    email: "admin@zchpc.com",
-    role: "Administrator",
-    department: "Management",
-    lastActive: "5 minutes ago",
-    status: "active",
-  },
-  {
-    id: "2",
-    name: "Takudzwa Nyamakanga",
-    email: "tnyamakanga@zchpc.com",
-    role: "Sales Manager",
-    department: "Sales",
-    lastActive: "1 hour ago",
-    status: "active",
-  },
-  {
-    id: "3",
-    name: "Sarah Mambongo",
-    email: "smambongo@zchpc.com",
-    role: "HR Manager",
-    department: "Human Resources",
-    lastActive: "3 hours ago",
-    status: "active",
-  },
-  {
-    id: "4",
-    name: "Robert Kawa",
-    email: "rkawa@zchpc.com",
-    role: "Inventory Manager",
-    department: "Operations",
-    lastActive: "Yesterday",
-    status: "inactive",
-  },
-  {
-    id: "5",
-    name: "Emily Munetsi",
-    email: "emunetsi@zchpc.com",
-    role: "Accountant",
-    department: "Finance",
-    lastActive: "2 days ago",
-    status: "active",
-  },
-  {
-    id: "6",
-    name: "Michael Mugadza",
-    email: "mmugadza@zchpc.com",
-    role: "Procurement Officer",
-    department: "Purchasing",
-    lastActive: "1 week ago",
-    status: "suspended",
-  },
-];
+import Server from "@/server/Server";
+import EditUserModal from "@/components/EditUserModal";
+import Users from "@/components/System/Users";
 
 // Department data
 const departments = [
@@ -132,10 +78,13 @@ const roles = [
 ];
 
 const SettingsPage = () => {
-  const { user } = useAuth();
+  // const { user } = useAuth();
+  const [users, setUsers] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [addUser, setAddUser] = useState(false);
+  const [editUserModal, setEditUserModal] = useState(false);
   const [addDepartment, setAddDepartment] = useState(false);
+  const [editEmployeeId, setEditEmployeeId] = useState('')
 
   // Settings state
   const [settings, setSettings] = useState({
@@ -154,43 +103,21 @@ const SettingsPage = () => {
     toast.success(`Setting updated successfully`);
   };
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "active":
-        return (
-          <Badge className="bg-green-100 text-green-800 hover:bg-green-200">
-            Active
-          </Badge>
-        );
-      case "inactive":
-        return (
-          <Badge className="bg-gray-100 text-gray-800 hover:bg-gray-200">
-            Inactive
-          </Badge>
-        );
-      case "suspended":
-        return (
-          <Badge className="bg-red-100 text-red-800 hover:bg-red-200">
-            Suspended
-          </Badge>
-        );
-      default:
-        return <Badge>{status}</Badge>;
-    }
+ 
+  const fetchUsers = () => {
+    Server.fetchUser()
+      .then((response) => {
+        console.log(response.data);
+        setUsers(response.data);
+      })
+      .catch((error) => {
+        console.log(error);
+      });
   };
 
-  const addNewUser = () => {
-    toast.success("User creation form would open here");
-    setAddUser(true);
-  };
-
-  const editUser = (id: string) => {
-    toast.success(`Edit user ${id}`);
-  };
-
-  const deleteUser = (id: string) => {
-    toast.success(`Delete user ${id}`);
-  };
+  useEffect(() => {
+    fetchUsers();
+  }, []);
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -213,92 +140,7 @@ const SettingsPage = () => {
         </TabsList>
 
         <TabsContent value="users">
-          <Card className="subtle-shadow">
-            <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0 pb-2">
-              <CardTitle>User Management</CardTitle>
-              <div className="flex items-center space-x-2">
-                <div className="relative">
-                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    type="search"
-                    placeholder="Search users..."
-                    className="pl-8 w-[200px] md:w-[250px]"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
-                </div>
-                <Button onClick={addNewUser}>
-                  <UserPlus className="mr-2 h-4 w-4" />
-                  Add User
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="rounded-md border">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-[80px]">ID</TableHead>
-                      <TableHead>User</TableHead>
-                      <TableHead>Role</TableHead>
-                      <TableHead>Department</TableHead>
-                      <TableHead>Last Active</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {users.map((user) => (
-                      <TableRow key={user.id}>
-                        <TableCell className="font-medium">{user.id}</TableCell>
-                        <TableCell>
-                          <div className="flex items-center space-x-2">
-                            <Avatar className="h-8 w-8">
-                              <AvatarImage
-                                src={`https://api.dicebear.com/7.x/initials/svg?seed=${user.name}`}
-                                alt={user.name}
-                              />
-                              <AvatarFallback>
-                                {user.name.charAt(0)}
-                              </AvatarFallback>
-                            </Avatar>
-                            <div>
-                              <div className="font-medium">{user.name}</div>
-                              <div className="text-sm text-muted-foreground">
-                                {user.email}
-                              </div>
-                            </div>
-                          </div>
-                        </TableCell>
-                        <TableCell>{user.role}</TableCell>
-                        <TableCell>{user.department}</TableCell>
-                        <TableCell>{user.lastActive}</TableCell>
-                        <TableCell>{getStatusBadge(user.status)}</TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex justify-end space-x-1">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => editUser(user.id)}
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => deleteUser(user.id)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            </CardContent>
-          </Card>
+          <Users setAddUser={setAddUser} />
         </TabsContent>
 
         <TabsContent value="departments">
@@ -616,8 +458,12 @@ const SettingsPage = () => {
         </TabsContent>
       </Tabs>
       {addUser && (
-        <AddUser setShowModal={() => setAddUser(false)} onSuccess={undefined} />
+        <AddUser
+          setShowModal={() => setAddUser(false)}
+          onSuccess={() => fetchUsers()}
+        />
       )}
+      {editUserModal && <EditUserModal  closeModal={() => setEditUserModal(false)} userId={editEmployeeId} />}
       {addDepartment && (
         <AddDepartment
           setShowModal={() => setAddDepartment(false)}
